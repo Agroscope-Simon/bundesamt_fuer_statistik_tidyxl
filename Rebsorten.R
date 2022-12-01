@@ -47,16 +47,7 @@ df <- bind_rows(file_list)
 
 df<- df |> 
   mutate("kanton" = regionen) |> 
-  mutate(kanton = case_when(grepl("Appenzell", kanton) ~ "Appenzell I.& A.", 
-                              grepl("Aargau", kanton) ~ "Aargau", 
-                              grepl("Luzern", kanton) ~ "Luzern", 
-                              grepl("Uri", kanton) ~ "Uri/Obwalden/Nidwalden",
-                              grepl("Nidwalden", kanton) ~ "Uri/Obwalden/Nidwalden",
-                              grepl("Obwalden", kanton) ~ "Uri/Obwalden/Nidwalden",
-                              grepl("Tessin", kanton) ~ "Tessin",
-                              grepl("Wallis", kanton) ~ "Wallis",
-                              grepl("Zug", kanton) ~ "Zug",
-                                TRUE ~ as.character(kanton))) |> 
+  coiu |> 
   mutate(regionen = case_when(grepl("Appenzell", regionen) ~ "Appenzell I.& A.", 
                             grepl("Aargau", regionen) ~ "Aargau", 
                             grepl("Luzern", regionen) ~ "Luzern", 

@@ -21,12 +21,14 @@ for (i in sheets) {
 
 cells <-
   xlsx_cells(path, sheets = i) %>%
-  dplyr::filter(!row == 1 , !is_blank) %>%
+ filter(!row %in% c(1,7,10, 52:60)) %>% 
+  dplyr::filter( !is_blank) %>%
   behead_if(local_format_id == 34, direction =  "left-up", name = "area") %>%
   behead("up-left", "hektoliter") %>% # Treat every cell in every row as a header
   behead("up-left", "sorten") %>%
-  behead("up-left", "farbe") |> 
-  select(row, col, data_type, character, numeric, sheet, style_format, local_format_id, area, hektoliter, sorten, farbe)
+  behead("up", "farbe") |> 
+  behead("left", "Kanton") %>% 
+  select(row, col, data_type, character, numeric, sheet, style_format, local_format_id, area, hektoliter, sorten, farbe, Kanton)
 
 final_list[[i]] <- cells
 }
@@ -34,12 +36,103 @@ final_list[[i]] <- cells
 
 df <- bind_rows(final_list)
 
+# Delete redundant information
+
+ df <- df %>%  
+  filter(!hektoliter == "Tafeltrauben in q") %>% 
+  filter(!(row ==51 & area == "Tessin 5 ")) %>% 
+  filter(!is.na(Kanton))
+ 
+ # Rename Categories
+ 
+ df <- df %>% 
+   mutate(area = case_when(grepl("Total 2", area) ~ "Total", 
+                             grepl("Tessin 4", area) ~ "Tessin", 
+                             grepl("Tessin 5", area) ~ "Tessin", 
+                             TRUE ~ as.character(area))) %>% 
+   mutate(sorten = case_when(grepl("europäische Reben", sorten) ~ "Europäische Rebsorten", 
+                             grepl("Gesamt-", sorten) ~ "Gesamtmittel",
+                             grepl("Interspezifische", sorten) ~ "Interspezifische Sorten",
+                             grepl("Total 1", sorten) ~ "Total",
+                             TRUE ~ as.character(sorten))) %>% 
+   mutate(hektoliter = case_when(grepl("Weinmost in hl pro ha", hektoliter) ~ "Weinmost in l pro m²", 
+                             grepl("Gesamt-", sorten) ~ "Gesamtmittel",
+                             TRUE ~ as.character(hektoliter))) %>% 
+   mutate(farbe = case_when(grepl("rote", farbe) ~ "Rote Trauben", 
+                            grepl("Rote", farbe) ~ "Rote Trauben", 
+                            grepl("rote ", farbe) ~ "Rote Trauben", 
+                            grepl("weisse", farbe) ~ "Weisse Trauben", 
+                            grepl("Weisse", farbe) ~ "Weisse Trauben", 
+                                 TRUE ~ as.character(farbe))) %>% 
+   mutate(Kanton = case_when(grepl("Uri", Kanton) ~ "Uri/Obwalden/Nidwalden", 
+                            grepl("Obwalden / Nidwalden 3", Kanton) ~ "Uri/Obwalden/Nidwalden", 
+                            grepl("Obwalden", Kanton) ~ "Uri/Obwalden/Nidwalden", 
+                            grepl("Nidwalden", Kanton) ~ "Uri/Obwalden/Nidwalden", 
+                            grepl("Uri / Obwalden / Nidwalden 4", Kanton) ~ "Uri/Obwalden/Nidwalden", 
+                            grepl("Genf 2", Kanton) ~ "Genf", 
+                            grepl("Genf 3", Kanton) ~ "Genf", 
+                            grepl("Appenzell A. Rh.", Kanton) ~ "Appenzell A. Rh. / I. Rh.", 
+                            grepl("Appenzell A. Rh. / I. Rh. 4", Kanton) ~ "Appenzell A. Rh. / I. Rh.", 
+                            grepl("Appenzell A. Rh. / I. Rh.3", Kanton) ~ "Appenzell A. Rh. / I. Rh.", 
+                            grepl("Appenzell I. Rh.", Kanton) ~ "Appenzell A. Rh. / I. Rh.", 
+                            TRUE ~ as.character(Kanton))) %>% 
+   rename(., Jahre = sheet) %>% 
+   rename(., Region = area) %>% 
+   rename(., Rebsortenfarbe = farbe) %>% 
+   rename(., Rebsorte = sorten) %>% 
+   rename(., Weinmost = hektoliter) %>% 
+   rename(., Traubenernte = numeric)
+   
+   
+   # Calculate means for Appenzell and Unterwalden
+ 
+ df <- df %>% 
+   group_by(Jahre, Region, Weinmost, Rebsorte, Rebsortenfarbe, Kanton, Traubenernte ) %>% 
+   summarise(Traubenernte = sum(Traubenernte, na.rm = T)) %>% 
+   ungroup()
+ 
+ 
+ 
 
 # Graph -------------------------------------------------------------------
+df %>% 
+   streamgraph(key = Kanton, value = Traubenernte, date = Jahre, 
+               scale = "continuous", interactive = TRUE) %>% 
+   sg_colors("Reds")
+ 
+ df %>%
+   hc_chart(type = 'streamgraph',
+            polar = FALSE,
+            inverted = FALSE) %>%
+   hc_xAxis(categories = Jahre) %>%
+   hc_yAxis(visible = TRUE) %>%
+   hc_tooltip(outside = TRUE, enabled = TRUE) %>%
+   hc_add_series(
+     df$,
+     name = 'y',
+     showInLegend = FALSE,
+     dataLabels = list(enabled = FALSE),
+     color = 'silver'
+   ) %>%
+   hc_add_series(
+     df$z,
+     name = 'z',
+     showInLegend = FALSE,
+     dataLabels = list(enabled = FALSE),
+     color = 'teal'
+   ) %>%
+   hc_add_series(
+     df$value ,
+     name = 'value',
+     showInLegend = FALSE,
+     dataLabels = list(enabled = FALSE),
+     color = 'orange'
+   ) %>%
+   hc_plotOptions(series = list(animation = FALSE))
 
-df |> 
-  count(hektoliter)
-
+ 
+ df %>% 
+   
 
 df |> 
   filter(hektoliter == "Weinmost in hl ") |> 
