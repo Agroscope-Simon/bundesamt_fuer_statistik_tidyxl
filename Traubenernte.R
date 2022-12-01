@@ -4,6 +4,9 @@ library(tidyxl)
 library(unpivotr)
 library(here)
 library(readxl)
+library(highcharter)
+library(htmlwidgets)
+library(RColorBrewer)
 
 path <- here("Data", "Traubenernte.xlsx")
 formats <- xlsx_formats(path)
@@ -84,11 +87,11 @@ df <- bind_rows(final_list)
    rename(., Traubenernte = numeric)
    
    
-   # Calculate means for Appenzell and Unterwalden
+   # Calculate sums for Appenzell and Unterwalden
  
- df <- df %>% 
-   group_by(Jahre, Region, Weinmost, Rebsorte, Rebsortenfarbe, Kanton, Traubenernte ) %>% 
-   summarise(Traubenernte = sum(Traubenernte, na.rm = T)) %>% 
+ df_sum <- df %>% 
+   group_by(Jahre, Region, Weinmost, Rebsorte, Rebsortenfarbe, Kanton ) %>% 
+   summarise(Result = sum(Traubenernte, na.rm = T)) %>% 
    ungroup()
  
  
@@ -129,7 +132,23 @@ df %>%
      color = 'orange'
    ) %>%
    hc_plotOptions(series = list(animation = FALSE))
+ 
+ 
+ cols <- brewer.pal(4, "Set1")
 
+ df %>%   
+ hchart("streamgraph", hcaes(x = Jahre, y = Traubenernte, group = Kanton)) %>%      # basic definition
+   hc_colors(cols) %>%                                                        # COLOR
+   hc_xAxis(title = list(text="Year")) %>%                                    # x-axis
+   hc_yAxis(title = list(text="GDP ($ trillion)"))  %>%                       # y-axis
+   hc_chart(style = list(fontFamily = "Georgia",                  
+                         fontWeight = "bold")) %>%                               # FONT
+   hc_plotOptions(series = list(marker = list(symbol = "circle"))) %>%           # SYMBOLS        
+   hc_legend(align = "right",                                         
+             verticalAlign = "top") %>%                                       # LEGEND
+   hc_tooltip(shared = TRUE,                    
+              borderColor = "black",
+              pointFormat = "{point.Kanton}: {point.Traubenernte:.2f}<br>")       # TOOLTIP
  
  df %>% 
    
