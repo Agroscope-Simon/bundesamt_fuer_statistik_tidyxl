@@ -41,11 +41,17 @@ df <- bind_rows(final_list)
 
 # Delete redundant information
 
+df <- df %>% 
+  mutate(Kanton = if_else(area == "Zürich", "Zürich", Kanton)) %>% 
+  mutate(Kanton = if_else(grepl("Tessin", area), "Tessin", Kanton)) 
+
  df <- df %>%  
   filter(!hektoliter == "Tafeltrauben in q") %>% 
   filter(!(row ==51 & area == "Tessin 5 ")) %>% 
   filter(!is.na(Kanton))
- 
+  
+  
+  df %>% filter(area == "Tessin")
  # Rename Categories
  
  df <- df %>% 
@@ -95,14 +101,48 @@ df <- bind_rows(final_list)
    ungroup()
  
  
+ total_region_hl <- df_sum %>% 
+   filter(Weinmost == "Weinmost in hl ") %>% 
+   filter(Rebsorte != "Total") %>% 
+   group_by(Jahre, Region) %>% 
+   summarise(Total_Kanton = sum(Result, na.rm = T)) 
+ 
+ total_kanton_hl <- df_sum %>% 
+   filter(Weinmost == "Weinmost in hl ") %>% 
+   filter(Rebsorte != "Total") %>% 
+   group_by(Jahre, Region, Kanton) %>% 
+   summarise(Total_Kanton = sum(Result, na.rm = T)) 
+ 
+ total_jahre_hl <- total_region_hl %>% 
+      group_by(Jahre) %>% 
+      summarise(Total_Jahre = sum(Total_Kanton, na.rm = T)) 
  
 
+
 # Graph -------------------------------------------------------------------
-df %>% 
-   streamgraph(key = Kanton, value = Traubenernte, date = Jahre, 
-               scale = "continuous", interactive = TRUE) %>% 
-   sg_colors("Reds")
+
  
+ 
+ 
+ cols <- brewer.pal(4, "Set1")
+
+ df_sum %>%   
+ hchart("streamgraph", hcaes(x = Jahre, y = Traubenernte, group = Kanton)) %>%      # basic definition
+   hc_colors(cols) %>%                                                        # COLOR
+   hc_xAxis(title = list(text="Year")) %>%                                    # x-axis
+   hc_yAxis(title = list(text="GDP ($ trillion)"))  %>%                       # y-axis
+   hc_chart(style = list(fontFamily = "Georgia",                  
+                         fontWeight = "bold")) %>%                               # FONT
+   hc_plotOptions(series = list(marker = list(symbol = "circle"))) %>%           # SYMBOLS        
+   hc_legend(align = "right",                                         
+             verticalAlign = "top") %>%                                       # LEGEND
+   hc_tooltip(shared = TRUE,                    
+              borderColor = "black",
+              pointFormat = "{point.Kanton}: {point.Traubenernte:.2f}<br>")       # TOOLTIP
+ 
+ 
+ 
+ # highchart example
  df %>%
    hc_chart(type = 'streamgraph',
             polar = FALSE,
@@ -133,31 +173,6 @@ df %>%
    ) %>%
    hc_plotOptions(series = list(animation = FALSE))
  
- 
- cols <- brewer.pal(4, "Set1")
-
- df %>%   
- hchart("streamgraph", hcaes(x = Jahre, y = Traubenernte, group = Kanton)) %>%      # basic definition
-   hc_colors(cols) %>%                                                        # COLOR
-   hc_xAxis(title = list(text="Year")) %>%                                    # x-axis
-   hc_yAxis(title = list(text="GDP ($ trillion)"))  %>%                       # y-axis
-   hc_chart(style = list(fontFamily = "Georgia",                  
-                         fontWeight = "bold")) %>%                               # FONT
-   hc_plotOptions(series = list(marker = list(symbol = "circle"))) %>%           # SYMBOLS        
-   hc_legend(align = "right",                                         
-             verticalAlign = "top") %>%                                       # LEGEND
-   hc_tooltip(shared = TRUE,                    
-              borderColor = "black",
-              pointFormat = "{point.Kanton}: {point.Traubenernte:.2f}<br>")       # TOOLTIP
- 
- df %>% 
-   
-
-df |> 
-  filter(hektoliter == "Weinmost in hl ") |> 
-  filter(area == "Genferseeregion") |> 
-  ggplot(aes(sheet, numeric, color = area)) +
-  geom_col()
 
 
 
