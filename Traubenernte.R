@@ -117,7 +117,10 @@ df <- df %>%
       group_by(Jahre) %>% 
       summarise(Total_Jahre = sum(Total_Kanton, na.rm = T)) 
  
-
+barplot_Stacked <- df_sum %>% 
+  filter(Weinmost == "Weinmost in hl ") %>% 
+  filter(Rebsorte != "Total") %>% 
+  select(Jahre, Region, Kanton, Rebsortenfarbe, Result) 
 
 # Graph -------------------------------------------------------------------
 
