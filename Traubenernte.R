@@ -48,8 +48,7 @@ df <- df %>%
  df <- df %>%  
   filter(!hektoliter == "Tafeltrauben in q") %>% 
   filter(!(row ==51 & area == "Tessin 5 ")) %>% 
-  filter(!is.na(Kanton))
-  
+  filter(!is.na(Kanton)) 
   
   df %>% filter(area == "Tessin")
  # Rename Categories
@@ -90,7 +89,7 @@ df <- df %>%
    rename(., Rebsortenfarbe = farbe) %>% 
    rename(., Rebsorte = sorten) %>% 
    rename(., Weinmost = hektoliter) %>% 
-   rename(., Traubenernte = numeric)
+   rename(., Traubenernte = numeric) 
    
    
    # Calculate sums for Appenzell and Unterwalden
@@ -124,16 +123,16 @@ barplot_Stacked <- df_sum %>%
 
 # Graph -------------------------------------------------------------------
 
+ formatC(10000, big.mark = "'")
  
  
- 
- cols <- brewer.pal(4, "Set1")
+ cols <- brewer.pal(7, "Set1")
 
- df_sum %>%   
- hchart("streamgraph", hcaes(x = Jahre, y = Traubenernte, group = Kanton)) %>%      # basic definition
+ total_region_hl %>%   
+ hchart("streamgraph", hcaes(x = Jahre, y = Total_Kanton, group = Region)) %>%      # basic definition
    hc_colors(cols) %>%                                                        # COLOR
-   hc_xAxis(title = list(text="Year")) %>%                                    # x-axis
-   hc_yAxis(title = list(text="GDP ($ trillion)"))  %>%                       # y-axis
+    hc_xAxis(title = list(text="")) %>%                                    # x-axis
+   hc_yAxis(title = list(text="Weinmost in hl"))  %>%                       # y-axis
    hc_chart(style = list(fontFamily = "Georgia",                  
                          fontWeight = "bold")) %>%                               # FONT
    hc_plotOptions(series = list(marker = list(symbol = "circle"))) %>%           # SYMBOLS        
@@ -141,9 +140,21 @@ barplot_Stacked <- df_sum %>%
              verticalAlign = "top") %>%                                       # LEGEND
    hc_tooltip(shared = TRUE,                    
               borderColor = "black",
-              pointFormat = "{point.Kanton}: {point.Traubenernte:.2f}<br>")       # TOOLTIP
- 
- 
+              pointFormat = "{point.Region}: {point.Total_Kanton:.2f}<br>") %>% 
+   hc_title(
+     text = "Traubenernte 1998-2021",
+     margin = 20,
+     align = "center",
+     style = list( useHTML = TRUE)
+   ) %>% 
+   hc_subtitle(
+     text = "Bundesamt für Statistik Schweiz",
+     align = "center",
+     style = list(fontWeight = "bold")
+   ) 
+   
+   # TOOLTIP
+
  
  # highchart example
  df %>%
