@@ -131,7 +131,7 @@ barplot_Stacked <- df_sum %>%
  total_region_hl %>%   
  hchart("streamgraph", hcaes(x = Jahre, y = Total_Kanton, group = Region)) %>%      # basic definition
    hc_colors(cols) %>%                                                        # COLOR
-    hc_xAxis(title = list(text="")) %>%                                    # x-axis
+   # hc_xAxis(title = list(text="")) %>%                                    # x-axis
    hc_yAxis(title = list(text="Weinmost in hl"))  %>%                       # y-axis
    hc_chart(style = list(fontFamily = "Georgia",                  
                          fontWeight = "bold")) %>%                               # FONT
