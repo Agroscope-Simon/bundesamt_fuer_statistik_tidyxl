@@ -7,6 +7,7 @@ library(readxl)
 library(highcharter)
 library(htmlwidgets)
 library(RColorBrewer)
+library(echarts4r)
 
 path <- here("Data", "Traubenernte.xlsx")
 formats <- xlsx_formats(path)
@@ -100,12 +101,14 @@ df <- df %>%
    ungroup()
  
  
- total_region_hl <- df_sum %>% 
+ total_region_hl <- df_sum %>%
    filter(Weinmost == "Weinmost in hl ") %>% 
    filter(Rebsorte != "Total") %>% 
    group_by(Jahre, Region) %>% 
    summarise(Total_Kanton = sum(Result, na.rm = T)) 
  
+
+
  total_kanton_hl <- df_sum %>% 
    filter(Weinmost == "Weinmost in hl ") %>% 
    filter(Rebsorte != "Total") %>% 
@@ -123,8 +126,7 @@ barplot_Stacked <- df_sum %>%
 
 # Graph -------------------------------------------------------------------
 
- formatC(10000, big.mark = "'")
- 
+
  
  cols <- brewer.pal(7, "Set1")
 
@@ -189,4 +191,20 @@ barplot_Stacked <- df_sum %>%
  
 
 
+ # Echarts4R
+ 
+ river <- data.frame(
+   dates = dates,
+   apples = runif(length(dates)),
+   bananas = runif(length(dates)),
+   pears = runif(length(dates))
+ )
+ 
+ river |> 
+   e_charts(dates) |> 
+   e_river(apples) |> 
+   e_river(bananas) |> 
+   e_river(pears) |> 
+   e_tooltip(trigger = "axis") |> 
+   e_title("River charts", "(Streamgraphs)")
 
