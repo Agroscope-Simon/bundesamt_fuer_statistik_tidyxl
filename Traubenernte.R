@@ -140,7 +140,7 @@ barplot_Stacked <- df_sum %>%
    hc_plotOptions(series = list(marker = list(symbol = "circle"))) %>%           # SYMBOLS        
    hc_legend(align = "right",                                         
              verticalAlign = "top") %>%                                       # LEGEND
-   hc_tooltip(shared = TRUE,                    
+   hc_tooltip(shared = F,                    
               borderColor = "black",
               pointFormat = "{point.Region}: {point.Total_Kanton:.2f}<br>") %>% 
    hc_title(
@@ -158,53 +158,30 @@ barplot_Stacked <- df_sum %>%
    # TOOLTIP
 
  
- # highchart example
- df %>%
-   hc_chart(type = 'streamgraph',
-            polar = FALSE,
-            inverted = FALSE) %>%
-   hc_xAxis(categories = Jahre) %>%
-   hc_yAxis(visible = TRUE) %>%
-   hc_tooltip(outside = TRUE, enabled = TRUE) %>%
-   hc_add_series(
-     df$,
-     name = 'y',
-     showInLegend = FALSE,
-     dataLabels = list(enabled = FALSE),
-     color = 'silver'
-   ) %>%
-   hc_add_series(
-     df$z,
-     name = 'z',
-     showInLegend = FALSE,
-     dataLabels = list(enabled = FALSE),
-     color = 'teal'
-   ) %>%
-   hc_add_series(
-     df$value ,
-     name = 'value',
-     showInLegend = FALSE,
-     dataLabels = list(enabled = FALSE),
-     color = 'orange'
-   ) %>%
-   hc_plotOptions(series = list(animation = FALSE))
  
-
 
  # Echarts4R
  
- river <- data.frame(
-   dates = dates,
-   apples = runif(length(dates)),
-   bananas = runif(length(dates)),
-   pears = runif(length(dates))
- )
- 
- river |> 
-   e_charts(dates) |> 
-   e_river(apples) |> 
-   e_river(bananas) |> 
-   e_river(pears) |> 
+ total_region_hl |> 
+   group_by(Region) |> 
+   e_charts(x = Jahre) |> # initialise and set x
+   e_river(serie = Total_Kanton) |> 
+   e_title("Traubenernte 1998-2021", "Use the brush") |> # title
+   e_theme("royal") |> # add a theme
+   e_brush() |> # add the brush
    e_tooltip(trigger = "axis") |> 
-   e_title("River charts", "(Streamgraphs)")
-
+   e_toolbox_feature(feature = "saveAsImage") |> # hit the download button!# Add tooltips
+   e_toolbox_feature(feature = "dataZoom") |> 
+   e_toolbox_feature(feature = "dataView") |> 
+   e_image_g(
+     right = 20,
+     top = 20,
+     z = -999,
+     style = list(
+       image = "https://thumbs.dreamstime.com/t/rotweinflasche-und-weinglas-68897210.jpg",
+       width = 100,
+       height = 100,
+       opacity = .9
+     )
+   ) 
+ 
