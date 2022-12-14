@@ -103,8 +103,8 @@ df <- df %>%
  
  total_region_hl <- df_sum %>%
    filter(Weinmost == "Weinmost in hl ") %>% 
-   filter(Rebsorte != "Total") %>%
-   filter(!Rebsorte %in% c("Rote", "Weisse")) %>% 
+   filter(Rebsorte == "Total") %>%
+   # filter(Rebsortefarbe %in% c("Rote Trauben", "Weisse Trauben")) %>% 
    group_by(Jahre, Region) %>%   
    summarise(Total_Kanton = sum(Result, na.rm = T)) 
  
@@ -112,7 +112,7 @@ df <- df %>%
 
  total_kanton_hl <- df_sum %>% 
    filter(Weinmost == "Weinmost in hl ") %>% 
-   filter(Rebsorte != "Total") %>% 
+   filter(Rebsorte == "Total") %>% 
    group_by(Jahre, Region, Kanton) %>% 
    summarise(Total_Kanton = sum(Result, na.rm = T)) 
  
@@ -128,12 +128,12 @@ barplot_Stacked <- df_sum %>%
 # Graph -------------------------------------------------------------------
 
 
- 
- cols <- brewer.pal(7, "Set1")
+ # graph für region
+ col <- brewer.pal(7, "Set1")
 
  total_region_hl %>%   
  hchart("streamgraph", hcaes(x = Jahre, y = Total_Kanton, group = Region)) %>%      # basic definition
-   hc_colors(cols) %>%                                                        # COLOR
+   hc_colors(col) %>%                                                        # COLOR
    # hc_xAxis(title = list(text="")) %>%                                    # x-axis
    hc_yAxis(title = list(text="Weinmost in hl"))  %>%                       # y-axis
    hc_chart(style = list(fontFamily = "Georgia",                  
@@ -156,7 +156,33 @@ barplot_Stacked <- df_sum %>%
      style = list(fontWeight = "bold")
    ) 
    
-   # TOOLTIP
+ # graph für kanton
+ col <- colorRampPalette(brewer.pal(9, "Spectral"))
+ 
+ total_kanton_hl %>%   
+   hchart("streamgraph", hcaes(x = Jahre, y = Total_Kanton, group = Kanton)) %>%      # basic definition
+   hc_colors(col(23)) %>%                                                        # COLOR
+   # hc_xAxis(title = list(text="")) %>%                                    # x-axis
+   hc_yAxis(title = list(text="Weinmost in hl"))  %>%                       # y-axis
+   hc_chart(style = list(fontFamily = "Georgia",                  
+                         fontWeight = "bold")) %>%                               # FONT
+   hc_plotOptions(series = list(marker = list(symbol = "circle"))) %>%           # SYMBOLS        
+   hc_legend(align = "right",                                         
+             verticalAlign = "top") %>%                                       # LEGEND
+   hc_tooltip(shared = F,                    
+              borderColor = "black",
+              pointFormat = "{point.Kanton}: {point.Total_Kanton:.2f}<br>") %>% 
+   hc_title(
+     text = "Traubenernte 1998-2021",
+     margin = 20,
+     align = "center",
+     style = list( useHTML = TRUE)
+   ) %>% 
+   hc_subtitle(
+     text = "Bundesamt für Statistik Schweiz",
+     align = "center",
+     style = list(fontWeight = "bold")
+   ) 
 
  
  
