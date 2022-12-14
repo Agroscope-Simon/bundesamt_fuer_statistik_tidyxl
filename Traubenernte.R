@@ -103,8 +103,9 @@ df <- df %>%
  
  total_region_hl <- df_sum %>%
    filter(Weinmost == "Weinmost in hl ") %>% 
-   filter(Rebsorte != "Total") %>% 
-   group_by(Jahre, Region) %>% 
+   filter(Rebsorte != "Total") %>%
+   filter(!Rebsorte %in% c("Rote", "Weisse")) %>% 
+   group_by(Jahre, Region) %>%   
    summarise(Total_Kanton = sum(Result, na.rm = T)) 
  
 
