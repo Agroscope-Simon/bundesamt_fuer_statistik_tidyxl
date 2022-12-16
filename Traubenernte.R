@@ -51,7 +51,7 @@ df <- df %>%
   filter(!(row ==51 & area == "Tessin 5 ")) %>% 
   filter(!is.na(Kanton)) 
   
-  df %>% filter(area == "Tessin")
+
  # Rename Categories
  
  df <- df %>% 
@@ -103,8 +103,7 @@ df <- df %>%
  
  total_region_hl <- df_sum %>%
    filter(Weinmost == "Weinmost in hl ") %>% 
-   filter(Rebsorte == "Total") %>%
-   # filter(Rebsortefarbe %in% c("Rote Trauben", "Weisse Trauben")) %>% 
+   filter(Rebsorte == "Total")
    group_by(Jahre, Region) %>%   
    summarise(Total_Kanton = sum(Result, na.rm = T)) 
  
