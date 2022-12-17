@@ -126,7 +126,41 @@ df_sum <- df %>%
   ungroup()
 
 
+# cumsum kanton
 
+df_cumsum <- df_sum %>% 
+  filter(region == "Total") %>% 
+  filter(!fläche == "Total Rebsorten") %>% 
+  filter(!weinsorte == "Total") 
+
+
+df_cumsum_weinsorte <- df_cumsum %>% 
+  group_by(kanton,weinsorte) %>% 
+  dplyr::mutate(csum = cumsum(Rebfläche_ha))
+
+write_csv(df_cumsum_weinsorte, here("output", "df_cumsum_weinsorte"))
+
+# cumsum total weinsorten
+
+df_cumsum <- df_sum %>% 
+  filter(region == "Total") %>% 
+  filter(!fläche == "Total Rebsorten") %>% 
+  filter(!weinsorte == "Total") %>% 
+  filter(!is.na(kanton))
+
+df_cumsum_total <- df_cumsum %>% 
+  filter(!weinsorte == "Übrige_weisse_Sorten") %>% 
+  group_by(weinsorte) %>% 
+  mutate(csum = cumsum(Rebfläche_ha))
+
+df_cumsum_total <- df_cumsum_total %>% 
+  pivot_wider(id_cols = weinsorte, 
+              names_from = jahre, 
+              values_from = Rebfläche_ha) %>% 
+  mutate(across(everything(), ~ replace_na(.,0))) %>% 
+  mutate(across(everything(), ~ round(.,0)))
+
+write_csv(df_cumsum_total, here("output", "df_cumsum_weinsorte"))
 
 #  datasets
 
