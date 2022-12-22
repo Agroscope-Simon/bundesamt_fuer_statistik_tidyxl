@@ -8,6 +8,12 @@ library(htmlwidgets)
 library(RColorBrewer)
 library(echarts4r)
 library(streamgraph)
+library(janitor)
+library(gganimate)
+library(gifski)
+library(png)
+library(tweenr)
+library(transformr)
 
 path <- here("Data", "Traubensorten.xlsx")
 formats <- xlsx_formats(path)
@@ -146,7 +152,7 @@ df_cumsum <- df_sum %>%
   filter(region == "Total") %>% 
   filter(!fläche == "Total Rebsorten") %>% 
   filter(!weinsorte == "Total") %>% 
-  filter(!is.na(kanton))
+  filter(is.na(kanton))
 
 df_cumsum_total <- df_cumsum %>% 
   filter(!weinsorte == "Übrige_weisse_Sorten") %>% 
@@ -234,8 +240,67 @@ col <- colorRampPalette(brewer.pal(11, "Spectral"))
     
     
 
+
+# bar race -----------------------------------------------------------------
+
+
     
-    
-    
+         
+         df_barrace <- df_cumsum %>%
+           filter(!weinsorte %in% c("Interspezifische_rote_sorten","Übrige_weisse_Sorten")) %>% 
+           group_by(jahre) %>%
+           # The * 1 makes it possible to have non-integer ranks while sliding
+           mutate(rank = rank(-Rebfläche_ha),
+                  Value_rel = Rebfläche_ha/Rebfläche_ha[rank==1],
+                  Value_lbl = paste0(" ",round(Rebfläche_ha, 0))) %>%
+           group_by(weinsorte) %>% 
+           filter(rank <=15) %>%
+           ungroup()
+         
+         # Animation
+         mypalette<-brewer.pal(7,"Greens")
+         
+         anim <- ggplot(df_barrace, aes(rank, group = weinsorte, 
+                                           fill = as.factor(weinsorte), color = as.factor(weinsorte))) +
+           geom_tile(aes(y = Rebfläche_ha/2,
+                         height = Rebfläche_ha,
+                         width = 0.9), alpha = 0.8, color = NA) +
+           geom_text(aes(y = 0, label = paste(weinsorte, " ")), vjust = 0.2, hjust = 1) +
+           geom_text(aes(y=Rebfläche_ha,label = Value_lbl, hjust=0)) +
+           coord_flip(clip = "off", expand = FALSE) +
+           scale_y_continuous(labels = scales::comma) +
+           scale_x_reverse() +
+           guides(color = FALSE, fill = FALSE) +
+           theme(axis.line=element_blank(),
+                 axis.text.x=element_blank(),
+                 axis.text.y=element_blank(),
+                 axis.ticks=element_blank(),
+                 axis.title.x=element_blank(),
+                 axis.title.y=element_blank(),
+                 legend.position="none",
+                 panel.background=element_blank(),
+                 panel.border=element_blank(),
+                 panel.grid.major=element_blank(),
+                 panel.grid.minor=element_blank(),
+                 panel.grid.major.x = element_line( size=.1, color="grey" ),
+                 panel.grid.minor.x = element_line( size=.1, color="grey" ),
+                 plot.title=element_text(size=20, hjust=0.5, face="bold", colour="black", vjust=1),
+                 plot.subtitle=element_text(size=14, hjust=0.5, face="italic", color="grey"),
+                 plot.caption =element_text(size=8, hjust=0.5, face="italic", color="black"),
+                 plot.background=element_blank(),
+                 plot.margin = margin(2,2, 2, 4, "cm")) +
+           transition_states(jahre, transition_length = 4, state_length = 1, wrap = FALSE) +
+           view_follow(fixed_x = TRUE)  +
+           labs(title = 'Rebflächen und Sorten 1999-2020: {closest_state}',  
+                subtitle  =  "Top 15 Rot- und Weissweine",
+                caption  = "Rebfläche in Aren | Data Source: Bundesamt für Statistik Schweiz") 
+         
+         # run animation in viewer
+         anim
+         
+         # For GIF
+         
+         animate(anim, 200, fps = 20,  width = 1200, height = 1000, 
+                 renderer = gifski_renderer("gganim.gif"), end_pause = 15, start_pause =  15) 
     
     
