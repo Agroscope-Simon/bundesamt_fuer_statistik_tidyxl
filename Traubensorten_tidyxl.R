@@ -303,4 +303,68 @@ col <- colorRampPalette(brewer.pal(11, "Spectral"))
          animate(anim, 200, fps = 20,  width = 1200, height = 1000, 
                  renderer = gifski_renderer("gganim.gif"), end_pause = 15, start_pause =  15) 
     
-    
+    #  drilldown plot
+         
+         
+         df_column <- df_sum |> 
+           filter(fläche == "Total Rebsorten") |> 
+           filter(jahre == "2020") |> 
+           filter(!region == "Total") |> 
+           filter(!is.na(kanton)) |> 
+           group_by(region) |> 
+           summarise(rebfläche = sum(Rebfläche_ha)) |> 
+           arrange(desc(rebfläche))
+         
+
+         df_drilldown <- df_sum |> 
+           filter(fläche == "Total Rebsorten") |> 
+           filter(jahre == "2020") |> 
+           filter(!region == "Total") |> 
+           filter(!is.na(kanton)) |>
+           rename(rebfläche = Rebfläche_ha) |> 
+           arrange(rebfläche) |> 
+           group_nest(region) |>
+           mutate(
+             id = region,
+             type = "column",
+             # in the drilldown we'll give the mapping via creating the columns
+             data = map(data, mutate, name = kanton, y  = rebfläche),
+             data = map(data, list_parse)
+           )
+
+         x <- c("Rebfläche (aren)")
+         y <- c("{point.rebfläche}")
+         
+         tt <- tooltip_table(x, y)
+         
+         hchart(
+           df_column,
+           "column",
+           hcaes(x = region, y = rebfläche, name = region, color = col(7), drilldown = region),
+           name = "Rebfläche",
+           colorByPoint = TRUE
+         ) |>
+           hc_drilldown(
+             allowPointDrilldown = TRUE,
+             series = list_parse(df_drilldown)
+           ) |>
+           hc_tooltip(
+             pointFormat = tt, # "{point.name} {point.rebfläche}"
+             useHTML = TRUE,
+             valueDecimals = 0
+           ) |>
+           hc_yAxis(
+             title = list(text = "Rebflächen (Aren)")
+             # type = "logarithmic",
+             # minorTickInterval = 'auto'
+           ) |>
+           hc_xAxis(
+             title = ""
+           ) |> 
+           hc_title(
+             text = "Rebflächen in der Schweiz (2020)",
+             margin = 20,
+             align = "center",
+             style = list( useHTML = TRUE))
+         
+             
